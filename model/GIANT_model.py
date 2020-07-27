@@ -46,8 +46,7 @@ class GIANTNet(torch.nn.Module):
     def forward(self, x, emb_ids_dict, edge_index, edge_type, edge_norm=None):
         if self.total_emb_size > 0:
             # embedding input
-            input_emb = self.embedder(
-                emb_ids_dict, self.emb_tags).transpose(1, 2)
+            input_emb = self.embedder(emb_ids_dict, self.emb_tags).transpose(1, 2)
             # input_emb.shape: 1 * node_num * total_emb_dim
             # x.shape: 1 * node_num * total_feature_num
 
@@ -62,7 +61,8 @@ class GIANTNet(torch.nn.Module):
         # internal conv
         if self.config.layers > 2:
             for n_l in range(self.config.layers - 2):
-                x = F.dropout(F.relu(self.gcns_internal[n_l](x, edge_index, edge_type, edge_norm)), self.dropout, training=self.training)
+                x = F.dropout(F.relu(self.gcns_internal[n_l](x, edge_index, edge_type, edge_norm)), self.dropout,
+                              training=self.training)
 
         # output conv
         outputs = []

@@ -44,16 +44,17 @@ def main(args):
     # get revised args
     # NOTICE: here is our default data organization structure. Change it if you are different.
     # original_data_folder = DATA_PATH + "original/" + args.data_type + "/"  # data_type is event or concept.
-    processed_data_folder = DATA_PATH + "processed/" + args.data_type + "/"
-    args.train_examples_file = processed_data_folder + 'train-examples.pkl'
-    args.dev_examples_file = processed_data_folder + 'dev-examples.pkl'
-    args.test_examples_file = processed_data_folder + 'test-examples.pkl'
-    args.train_output_file = processed_data_folder + 'train_output.txt'
-    args.eval_output_file = processed_data_folder + 'eval_output.txt'
-    args.test_output_file = processed_data_folder + 'test_output.txt'
-    args.emb_mats_file = processed_data_folder + 'emb_mats.pkl'
-    args.emb_dicts_file = processed_data_folder + 'emb_dicts.pkl'
-    args.counters_file = processed_data_folder + 'counters.pkl'
+
+    processed_data_folder = os.path.join(DATA_PATH, 'processed', args.data_type)
+    args.train_examples_file = os.path.join(processed_data_folder, 'train-examples.pkl')
+    args.dev_examples_file = os.path.join(processed_data_folder, 'dev-examples.pkl')
+    args.test_examples_file = os.path.join(processed_data_folder, 'test-examples.pkl')
+    args.train_output_file = os.path.join(processed_data_folder, 'train_output.txt')
+    args.eval_output_file = os.path.join(processed_data_folder, 'eval_output.txt')
+    args.test_output_file = os.path.join(processed_data_folder, 'test_output.txt')
+    args.emb_mats_file = os.path.join(processed_data_folder, 'emb_mats.pkl')
+    args.emb_dicts_file = os.path.join(processed_data_folder, 'emb_dicts.pkl')
+    args.counters_file = os.path.join(processed_data_folder, 'counters.pkl')
 
     # get checkpoint save path
     args_for_checkpoint_folder_name = [
@@ -96,7 +97,8 @@ def main(args):
     test_dataloader = data_list[math.floor(0.9 * len(data_list)):]
 
     # model
-    model = Model(config=args, in_channels=feature_dim, out_channels=args.d_model, num_relations=num_relations, num_bases=args.num_bases,
+    model = Model(config=args, in_channels=feature_dim, out_channels=args.d_model, num_relations=num_relations,
+                  num_bases=args.num_bases,
                   emb_mats=emb_mats, emb_dicts=emb_dicts, dropout=0.1)  # TODO: set them according to args
     summarize_model(model)
     if use_cuda and args.use_multi_gpu and n_gpu > 1:

@@ -21,14 +21,14 @@ import random
 from .config import *
 from util.file_utils import load, save
 from util.dict_utils import counter2ordered_dict
-from common.constants import STOPWORDS, PUNCTUATIONS, FIGURE_PATH, OUTPUT_PATH, SYNONYM_DICT, CONCEPT_PATTERN_DICT, SPECIAL_WORDS, PATTERN_WORDS  # SPECIAL_WORDS
+from common.constants import STOPWORDS, PUNCTUATIONS, FIGURE_PATH, OUTPUT_PATH, SYNONYM_DICT, CONCEPT_PATTERN_DICT, \
+    SPECIAL_WORDS, PATTERN_WORDS  # SPECIAL_WORDS
 import os
 from nltk.parse.corenlp import CoreNLPDependencyParser
 import networkx as nx
 from networkx.drawing.nx_pydot import write_dot
 from .GIANT_data_utils import char2cid, get_embedding, from_networkx
 from torch_geometric.data import Data  # , DataLoader
-
 
 DEP_PARSER = CoreNLPDependencyParser(url='http://localhost:9005')
 
@@ -238,7 +238,7 @@ def get_candidate_phrases(e):
 
 
 def get_cleaned_qts(config, e):
-    #! NOTICE: we only do the following operations for phrase mining task
+    # ! NOTICE: we only do the following operations for phrase mining task
     # so when it is multi task, or event element extraction task, we do not clean qt.
     # Because it may remove important element words.
     if "event" not in config.tasks:
@@ -251,7 +251,8 @@ def get_cleaned_qts(config, e):
             new_t_split = []
             for token in t_split:
                 token_w = token.split("/")[0]
-                if token_w in e["candidate_phrases_concat"] or len(set(token_w).intersection(set(e["candidate_phrases_concat"]))) > 2:
+                if token_w in e["candidate_phrases_concat"] or len(
+                        set(token_w).intersection(set(e["candidate_phrases_concat"]))) > 2:
                     new_t_split.append(token)
             new_t = " ".join(new_t_split)
             # print("after clean: ", new_t)
@@ -281,7 +282,8 @@ def normalize_text(text):
     """
     # NOTICE: don't change the text length.
     # Otherwise, the answer position is changed.
-    text = text.replace(",", "，")  # NOTICE: this solves the problem in plot_graph. When "," contained in words, it cannot work.
+    text = text.replace(",",
+                        "，")  # NOTICE: this solves the problem in plot_graph. When "," contained in words, it cannot work.
     return text
 
 
@@ -292,12 +294,13 @@ def get_raw_examples(config, filename, debug=False, debug_length=20):
     print("Start get raw examples ...")
     start = datetime.now()
     raw_examples = []
-    with open(filename, 'r') as fp:
+    with open(filename, 'r', encoding='utf-8') as fp:
         events = json.load(fp)
         for i in range(len(events)):
             e = events[str(i)]
             e = unify_word_segments(e)  # Unify the segments helps
-            e = get_candidate_phrases(e)  # For events, we select sub titles; for concepts, we perform pattern matching and QT-align.
+            e = get_candidate_phrases(
+                e)  # For events, we select sub titles; for concepts, we perform pattern matching and QT-align.
             if len(e["candidate_phrases"]) > 0:
                 e["candidate_phrases_concat"] = " ".join(e["candidate_phrases"])
             else:
@@ -387,7 +390,8 @@ def text2features(config, text, tagged_text=None, candidate_phrases_concat=None)
 
     result["is_special"] = [float(w in SPECIAL_WORDS) for w in result["word"]]
     if config.indicate_candidate:
-        result["is_special"] = [float(check_is_special(w)) for w in result["word"]]  # notice: we revised is_special as whether it is candidate words
+        result["is_special"] = [float(check_is_special(w)) for w in
+                                result["word"]]  # notice: we revised is_special as whether it is candidate words
 
     # word length
     result["word_len"] = [len(w) for w in result["word"]]
@@ -418,11 +422,13 @@ def build_linguistic_features(config, e):
     # if "query" in e:  # NOTICE: the event dataset doesn't have "query" column
     e["queries_features"] = []
     for i in range(len(e["queries"])):
-        e["queries_features"].append(text2features(config, e["queries"][i], e["queries_tagged"][i], e["candidate_phrases_concat"]))
+        e["queries_features"].append(
+            text2features(config, e["queries"][i], e["queries_tagged"][i], e["candidate_phrases_concat"]))
 
     e["titles_features"] = []
     for i in range(len(e["titles"])):
-        e["titles_features"].append(text2features(config, e["titles"][i], e["titles_tagged"][i], e["candidate_phrases_concat"]))
+        e["titles_features"].append(
+            text2features(config, e["titles"][i], e["titles_tagged"][i], e["candidate_phrases_concat"]))
 
     e["phrase_features"] = text2features(config, e["phrase"], e["phrase_tagged"], e["candidate_phrases_concat"])
     return e
@@ -478,7 +484,8 @@ def get_counters(examples, tags, not_count_tags):
     return counters
 
 
-def create_graph(tagged_query_titles_sample, edge_types_list=["seq", "dep", "contain", "synonym"], emb_dicts=None, config=None):
+def create_graph(tagged_query_titles_sample, edge_types_list=["seq", "dep", "contain", "synonym"], emb_dicts=None,
+                 config=None):
     # create graph
     G = nx.MultiDiGraph()
 
@@ -536,7 +543,8 @@ def create_graph(tagged_query_titles_sample, edge_types_list=["seq", "dep", "con
     # add y labels into node features dict. TODO: maybe add more y labels here
     sos_node[1]["y_phrase"] = 0  # whether node in output phrase. This is used for phrase generation.
     eos_node[1]["y_phrase"] = 0
-    sos_node[1]["y_node_type"] = 0  # what kind of node it is. {0: sos and eos, normal node, 1: trigger, 2: entity, 3: location}
+    sos_node[1][
+        "y_node_type"] = 0  # what kind of node it is. {0: sos and eos, normal node, 1: trigger, 2: entity, 3: location}
     eos_node[1]["y_node_type"] = 0  # this is used for event elements extraction
 
     # add sos and eos node to graph
@@ -576,7 +584,8 @@ def create_graph(tagged_query_titles_sample, edge_types_list=["seq", "dep", "con
         cur_id = 0  # position id in sequence
         pre_node = "<sos>"
 
-        for i in range(len(text_features["word"])):  # text_features["word"] is the list of segmented words in current seq (query or title)
+        for i in range(len(text_features[
+                               "word"])):  # text_features["word"] is the list of segmented words in current seq (query or title)
             # get node features
             word = text_features["word"][i].rstrip()
             if word == "":
@@ -637,7 +646,8 @@ def create_graph(tagged_query_titles_sample, edge_types_list=["seq", "dep", "con
 
             # add y labels
             # TODO: handle segmentation not consistant problem: such as 浓眉 哥 but answer is 浓眉哥， or inverse.
-            node[1]["y_phrase"] = int(word in output_sets["phrase"])  # this y indicates whether a node shows in output phrase
+            node[1]["y_phrase"] = int(
+                word in output_sets["phrase"])  # this y indicates whether a node shows in output phrase
             if data_type != "event":
                 node[1]["y_node_type"] = 0
             else:  # NOTICE: in the following, we don't consider the importance level in our dataset. of course, we can consider it and change the condition.
@@ -655,9 +665,11 @@ def create_graph(tagged_query_titles_sample, edge_types_list=["seq", "dep", "con
 
             # add sequence edges
             if "seq" in edge_types_list and not G.has_edge(pre_node, word):
-                G.add_edges_from([(pre_node, word, {"label": "s", "edge_type": "s", "color": "blue", "seq_id": seq_id})])  # NOTICE: use "edge_type" as key helps graphviz use dot plot edge label.
+                G.add_edges_from([(pre_node, word, {"label": "s", "edge_type": "s", "color": "blue",
+                                                    "seq_id": seq_id})])  # NOTICE: use "edge_type" as key helps graphviz use dot plot edge label.
             if "req" in edge_types_list and not G.has_edge(word, pre_node):
-                G.add_edges_from([(word, pre_node, {"label": "r", "edge_type": "r", "color": "red", "seq_id": seq_id})])  # NOTICE: use "edge_type" as key helps graphviz use dot plot edge label.
+                G.add_edges_from([(word, pre_node, {"label": "r", "edge_type": "r", "color": "red",
+                                                    "seq_id": seq_id})])  # NOTICE: use "edge_type" as key helps graphviz use dot plot edge label.
             pre_node = word
 
         if "seq" in edge_types_list and not G.has_edge(pre_node, "<eos>"):
@@ -678,9 +690,13 @@ def create_graph(tagged_query_titles_sample, edge_types_list=["seq", "dep", "con
                         continue  # NOTICE: in this case, the dep parser split words into more fine-grained words.
                     dep_type = "_".join(dep[1].split(":"))  # this replace : with _ for dot file.
                     if not G.has_edge(source, target):
-                        if (config.use_clean_qt and keep_word(source, tagged_query_titles_sample) and keep_word(target, tagged_query_titles_sample)) or not config.use_clean_qt:
-                            G.add_edges_from([(source, target, {"label": dep_type, "edge_type": dep_type, "color": "black", "seq_id": seq_id})])
-                            G.add_edges_from([(target, source, {"label": "r_" + dep_type, "edge_type": "r_" + dep_type, "color": "black", "seq_id": seq_id})])
+                        if (config.use_clean_qt and keep_word(source, tagged_query_titles_sample) and keep_word(target,
+                                                                                                                tagged_query_titles_sample)) or not config.use_clean_qt:
+                            G.add_edges_from([(source, target,
+                                               {"label": dep_type, "edge_type": dep_type, "color": "black",
+                                                "seq_id": seq_id})])
+                            G.add_edges_from([(target, source, {"label": "r_" + dep_type, "edge_type": "r_" + dep_type,
+                                                                "color": "black", "seq_id": seq_id})])
         return G
 
     # handle queries
@@ -693,8 +709,9 @@ def create_graph(tagged_query_titles_sample, edge_types_list=["seq", "dep", "con
     t_idx = 0
     for t in tagged_query_titles_sample["titles_features"]:
         if data_type == "event":
-            if len(tagged_query_titles_sample["is_title_matches_events"]) > t_idx and tagged_query_titles_sample["is_title_matches_events"][t_idx] == "1":
-                    G = _add_subgraph(G, t, seq_id, output_sets)
+            if len(tagged_query_titles_sample["is_title_matches_events"]) > t_idx and \
+                    tagged_query_titles_sample["is_title_matches_events"][t_idx] == "1":
+                G = _add_subgraph(G, t, seq_id, output_sets)
         if data_type != "event":
             G = _add_subgraph(G, t, seq_id, output_sets)
         t_idx += 1
@@ -710,18 +727,29 @@ def create_graph(tagged_query_titles_sample, edge_types_list=["seq", "dep", "con
                 tgt = all_node_labels[node_j]
                 if "contain" in edge_types_list:
                     if src_contains_tgt(src, tgt):
-                        if (config.use_clean_qt and keep_word(src, tagged_query_titles_sample) and keep_word(tgt, tagged_query_titles_sample)) or not config.use_clean_qt:
-                            G.add_edges_from([(src, tgt, {"label": "contain", "edge_type": "contain", "color": "green", "seq_id": 0})])
-                            G.add_edges_from([(tgt, src, {"label": "contained", "edge_type": "contained", "color": "green", "seq_id": 0})])
+                        if (config.use_clean_qt and keep_word(src, tagged_query_titles_sample) and keep_word(tgt,
+                                                                                                             tagged_query_titles_sample)) or not config.use_clean_qt:
+                            G.add_edges_from([(src, tgt, {"label": "contain", "edge_type": "contain", "color": "green",
+                                                          "seq_id": 0})])
+                            G.add_edges_from([(tgt, src,
+                                               {"label": "contained", "edge_type": "contained", "color": "green",
+                                                "seq_id": 0})])
                     if src_contains_tgt(tgt, src):
-                        if (config.use_clean_qt and keep_word(src, tagged_query_titles_sample) and keep_word(tgt, tagged_query_titles_sample)) or not config.use_clean_qt:
-                            G.add_edges_from([(src, tgt, {"label": "contained", "edge_type": "contained", "color": "green", "seq_id": 0})])
-                            G.add_edges_from([(tgt, src, {"label": "contain", "edge_type": "contain", "color": "green", "seq_id": 0})])
+                        if (config.use_clean_qt and keep_word(src, tagged_query_titles_sample) and keep_word(tgt,
+                                                                                                             tagged_query_titles_sample)) or not config.use_clean_qt:
+                            G.add_edges_from([(src, tgt,
+                                               {"label": "contained", "edge_type": "contained", "color": "green",
+                                                "seq_id": 0})])
+                            G.add_edges_from([(tgt, src, {"label": "contain", "edge_type": "contain", "color": "green",
+                                                          "seq_id": 0})])
                 if "synonym" in edge_types_list:
                     if src_tgt_is_synonym(src, tgt, synonyms_dict=SYNONYM_DICT):
-                        if (config.use_clean_qt and keep_word(src, tagged_query_titles_sample) and keep_word(tgt, tagged_query_titles_sample)) or not config.use_clean_qt:
-                            G.add_edges_from([(src, tgt, {"label": "synonym", "edge_type": "synonym", "color": "yellow", "seq_id": 0})])
-                            G.add_edges_from([(tgt, src, {"label": "synonym", "edge_type": "synonym", "color": "yellow", "seq_id": 0})])
+                        if (config.use_clean_qt and keep_word(src, tagged_query_titles_sample) and keep_word(tgt,
+                                                                                                             tagged_query_titles_sample)) or not config.use_clean_qt:
+                            G.add_edges_from([(src, tgt, {"label": "synonym", "edge_type": "synonym", "color": "yellow",
+                                                          "seq_id": 0})])
+                            G.add_edges_from([(tgt, src, {"label": "synonym", "edge_type": "synonym", "color": "yellow",
+                                                          "seq_id": 0})])
     # TODO: maybe add global feature: whether this graph is an event.  binary label for whole graph.
     return G
 
@@ -767,7 +795,8 @@ def get_graph_examples(config, examples, edge_types_list=["seq", "dep", "contain
     # print("edge_types2ids is: ", edge_types2ids)
     for example in tqdm(examples_with_graphs):
         example["G_data"].edge_type_id = torch.tensor(
-            [edge_types2ids[e_type] for e_type in example["G_data"].edge_type])  # NOTICE: here we haven't consider e_type not in edge_types2ids
+            [edge_types2ids[e_type] for e_type in
+             example["G_data"].edge_type])  # NOTICE: here we haven't consider e_type not in edge_types2ids
         example["G_data"].num_relations = len(edge_types)
     # print("""example["G_data"].edge_type: """, example["G_data"].edge_type)
     # print("""example["G_data"].edge_type_id: """, example["G_data"].edge_type_id)
@@ -816,9 +845,9 @@ def prepro(config):
 
     if not config.processed_example_graph_features:
         # NOTICE: we should set update_edge_types2ids = True only for train dataset
-        #if config.processed_emb and "edge_types" in emb_dicts:
+        # if config.processed_emb and "edge_types" in emb_dicts:
         #    edge_types2ids = emb_dicts["edge_types"]
-        #else:
+        # else:
         edge_types2ids = {}
         examples, num_relations, edge_types2ids = get_graph_examples(
             config, examples, config.edge_types_list, emb_dicts, edge_types2ids, update_edge_types2ids=True)
@@ -827,11 +856,13 @@ def prepro(config):
         save(config.emb_dicts_file, emb_dicts, message="embedding dicts")
 
     # print to txt to debug
+    if not os.path.exists(os.path.join(OUTPUT_PATH, 'debug')):
+        os.makedirs(os.path.join(OUTPUT_PATH, 'debug'))
     for k in emb_dicts:
-        write_dict(emb_dicts[k], OUTPUT_PATH + "debug/emb_dicts_" + str(k) + ".txt")
+        write_dict(emb_dicts[k], os.path.join(OUTPUT_PATH, 'debug', f'emb_dicts_{k}.txt'))
     for k in counters:
-        write_counter(counters[k], OUTPUT_PATH + "debug/counters_" + str(k) + ".txt")
-    write_example(examples[5], OUTPUT_PATH + "debug/example.txt")
+        write_counter(counters[k], os.path.join(OUTPUT_PATH, 'debug', f'counters_{k}.txt'))
+    write_example(examples[5], os.path.join(OUTPUT_PATH, 'debug', 'example.txt'))
 
 
 def write_example(e, filename):
@@ -896,9 +927,9 @@ def get_loader(examples_file, batch_size, shuffle=False, debug=False, debug_leng
         x = torch.FloatTensor(feature_list).t().unsqueeze(0).contiguous()  # 1 * num_nodes * num_features
         edge_index = e["G_data"].edge_index
         edge_type = e["G_data"].edge_type_id
-        #print("DEBUG node_idx: ", e["G_data"].node_index)
-        #print("DEBUG edge_idx:  ", edge_index)
-        #print("DEBUG edge_type: ", edge_type)
+        # print("DEBUG node_idx: ", e["G_data"].node_index)
+        # print("DEBUG edge_idx:  ", edge_index)
+        # print("DEBUG edge_type: ", edge_type)
         y = torch.LongTensor(e["G_data"].y_phrase)
         y_node_type = torch.LongTensor(e["G_data"].y_node_type)
         words = e["G_data"].word

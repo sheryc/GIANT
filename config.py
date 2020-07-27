@@ -8,14 +8,15 @@ import os
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-
 # data directory
 # NOTICE: we assume a specific structure for project organization.
 # Change the paths in this file and in common/constants.py if your
 # project structure is different.
 dataset_name = "GIANT"  # NOTICE: change it for different datasets
-original_data_folder = DATA_PATH + "original/" + dataset_name + "/"
-processed_data_folder = DATA_PATH + "processed/" + dataset_name + "/"
+# original_data_folder = DATA_PATH + "original/" + dataset_name + "/"
+original_data_folder = os.path.join(DATA_PATH, 'original', dataset_name)
+# processed_data_folder = DATA_PATH + "processed/" + dataset_name + "/"
+processed_data_folder = os.path.join(DATA_PATH, 'processed', dataset_name)
 
 # configure of embeddings
 emb_config = {
@@ -209,58 +210,58 @@ parser.add_argument(
 
 parser.add_argument(
     '--data_file',
-    default=original_data_folder + 'data.txt',
+    default=os.path.join(original_data_folder, 'data.txt'),
     type=str, help='path of full dataset')
 parser.add_argument(
     '--train_file',
-    default=original_data_folder + 'train.txt',
+    default=os.path.join(original_data_folder, 'train.txt'),
     type=str, help='path of train dataset')
 parser.add_argument(
     '--dev_file',
-    default=original_data_folder + 'dev.txt',
+    default=os.path.join(original_data_folder, 'dev.txt'),
     type=str, help='path of dev dataset')
 parser.add_argument(
     '--test_file',
-    default=original_data_folder + 'test.txt',
+    default=os.path.join(original_data_folder, 'test.txt'),
     type=str, help='path of test dataset')
 
 parser.add_argument(
     '--train_examples_file',
-    default=processed_data_folder + 'train-examples.pkl',
+    default=os.path.join(processed_data_folder, 'train-examples.pkl'),
     type=str, help='path of train dataset examples file')
 parser.add_argument(
     '--dev_examples_file',
-    default=processed_data_folder + 'dev-examples.pkl',
+    default=os.path.join(processed_data_folder, 'dev-examples.pkl'),
     type=str, help='path of dev dataset examples file')
 parser.add_argument(
     '--test_examples_file',
-    default=processed_data_folder + 'test-examples.pkl',
+    default=os.path.join(processed_data_folder, 'test-examples.pkl'),
     type=str, help='path of test dataset examples file')
 
 parser.add_argument(
     '--train_output_file',
-    default=processed_data_folder + 'train_output.txt',
+    default=os.path.join(processed_data_folder, 'train_output.txt'),
     type=str, help='path of train result file')
 parser.add_argument(
     '--eval_output_file',
-    default=processed_data_folder + 'eval_output.txt',
+    default=os.path.join(processed_data_folder, 'eval_output.txt'),
     type=str, help='path of evaluation result file')
 parser.add_argument(
     '--test_output_file',
-    default=processed_data_folder + 'test_output.txt',
+    default=os.path.join(processed_data_folder, 'test_output.txt'),
     type=str, help='path of test result file')
 
 parser.add_argument(
     '--emb_mats_file',
-    default=processed_data_folder + 'emb_mats.pkl',
+    default=os.path.join(processed_data_folder, 'emb_mats.pkl'),
     type=str, help='path of embedding matrices file')
 parser.add_argument(
     '--emb_dicts_file',
-    default=processed_data_folder + 'emb_dicts.pkl',
+    default=os.path.join(processed_data_folder, 'emb_dicts.pkl'),
     type=str, help='path of embedding dicts file')
 parser.add_argument(
     '--counters_file',
-    default=processed_data_folder + 'counters.pkl',
+    default=os.path.join(processed_data_folder, 'counters.pkl'),
     type=str, help='path of counters file')
 
 parser.add_argument(
@@ -393,10 +394,12 @@ parser.add_argument(
     help='types of edges in GIANT input graphs')
 parser.add_argument(
     '--use_clean_qt',
-    default=False, action='store_true', help='whether clean queries and titles by top maxNQ and maxNT candidate phrases')
+    default=False, action='store_true',
+    help='whether clean queries and titles by top maxNQ and maxNT candidate phrases')
 parser.add_argument(
     '--indicate_candidate',
-    default=False, action='store_true', help='whether clean queries and titles by top maxNQ and maxNT candidate phrases')
+    default=False, action='store_true',
+    help='whether clean queries and titles by top maxNQ and maxNT candidate phrases')
 parser.add_argument(
     '--maxNQ', type=int, default=10,
     help='Maximum number of Queries to use')
