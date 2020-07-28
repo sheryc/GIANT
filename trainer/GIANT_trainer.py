@@ -103,7 +103,7 @@ class Trainer(object):
     def _update_best_result(self, new_result, best_result):
         is_best = False
         # NOTICE: when we have multi tasks, we use task 0 as the criteria to select best model...
-        if (new_result[self.args.tasks[0]][self.best_result_key] > best_result[self.args.tasks[0]][self.best_result_key]):
+        if new_result[self.args.tasks[0]][self.best_result_key] > best_result[self.args.tasks[0]][self.best_result_key]:
             is_best = True
         for task in self.args.tasks:
             for key in self.result_keys[task]:
@@ -126,7 +126,7 @@ class Trainer(object):
                 result, self.best_result)
 
             if self.args.use_early_stop:
-                if (not is_best):
+                if not is_best:
                     patience += 1
                     if patience > self.args.early_stop:
                         print("Perform early stop!")

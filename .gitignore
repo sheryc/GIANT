@@ -1,3 +1,5 @@
 .DS_Store
 /data/Tencent_AILab_ChineseEmbedding.txt
 /output/
+/outputcheckpoint/
+/.vscode/

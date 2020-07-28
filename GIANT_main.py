@@ -4,7 +4,7 @@ NOTICE: first run the following commands
 NOTICE: the timeout parameter in java command 1500000 means 1500 seconds the process will terminate. Set it properly. Otherwise, we may have timeout error.
 
 Commands:
-1. command line window A: start stanford nlp server
+1. (deprecated, changed to stanza) command line window A: start stanford nlp server
 cd some_path/stanford-corenlp-full-2018-10-05/
 java -Xmx4g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -serverProperties StanfordCoreNLP-chinese.properties -preload tokenize,ssplit,pos,lemma,ner,parse,depparse -status_port 9005  -port 9005 -timeout 1500000
 
@@ -122,8 +122,7 @@ def main(args):
         eps=1e-8,
         weight_decay=3e-7)
     cr = 1.0 / math.log(args.lr_warm_up_num)
-    scheduler = torch.optim.lr_scheduler.LambdaLR(
-        optimizer,
+    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
         lr_lambda=lambda ee: cr * math.log(ee + 1)
         if ee < args.lr_warm_up_num else 1)
 

@@ -8,3 +8,4 @@ scikit-learn~=0.23.1
 networkx~=2.4
 six~=1.15.0
 elkai~=0.0.9
+stanza~=1.0.1

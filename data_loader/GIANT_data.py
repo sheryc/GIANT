@@ -18,19 +18,21 @@ from datetime import datetime
 from collections import defaultdict
 import re
 import random
-from .config import *
+# from .config import *
 from util.file_utils import load, save
 from util.dict_utils import counter2ordered_dict
 from common.constants import STOPWORDS, PUNCTUATIONS, FIGURE_PATH, OUTPUT_PATH, SYNONYM_DICT, CONCEPT_PATTERN_DICT, \
     SPECIAL_WORDS, PATTERN_WORDS  # SPECIAL_WORDS
 import os
-from nltk.parse.corenlp import CoreNLPDependencyParser
+# from nltk.parse.corenlp import CoreNLPDependencyParser
+import stanza
 import networkx as nx
 from networkx.drawing.nx_pydot import write_dot
 from .GIANT_data_utils import char2cid, get_embedding, from_networkx
 from torch_geometric.data import Data  # , DataLoader
 
-DEP_PARSER = CoreNLPDependencyParser(url='http://localhost:9005')
+
+# DEP_PARSER = CoreNLPDependencyParser(url='http://localhost:9005')
 
 
 def cover_count(title, entitydict):
@@ -287,7 +289,7 @@ def normalize_text(text):
     return text
 
 
-def get_raw_examples(config, filename, debug=False, debug_length=20):
+def get_raw_examples(filename, debug=False, debug_length=20):
     """
     Get a list of raw examples given input event filename.
     """
@@ -367,8 +369,13 @@ def text2features(config, text, tagged_text=None, candidate_phrases_concat=None)
         result["tag"] = result_tag_list
 
     # dep
-    parses = DEP_PARSER.parse(result_word_list)
-    dep_result = [[(governor, dep, dependent) for governor, dep, dependent in parse.triples()] for parse in parses]
+    # parses = DEP_PARSER.parse(result_word_list)
+    # dep_result = [[(governor, dep, dependent) for governor, dep, dependent in parse.triples()] for parse in parses]
+    pipeline = stanza.Pipeline(lang='zh', processors='tokenize,mwt,pos,lemma,depparse', tokenize_pretokenized=True)
+    doc = pipeline([result_word_list])
+    dep_result = tuple(
+        [((sent.words[word.head - 1].text, sent.words[word.head - 1].xpos), word.deprel, (word.text, word.xpos))
+         for sent in doc.sentences for word in sent.words if word.deprel != 'root'])
     result["dep"] = dep_result
 
     # is digit
@@ -584,8 +591,7 @@ def create_graph(tagged_query_titles_sample, edge_types_list=["seq", "dep", "con
         cur_id = 0  # position id in sequence
         pre_node = "<sos>"
 
-        for i in range(len(text_features[
-                               "word"])):  # text_features["word"] is the list of segmented words in current seq (query or title)
+        for i in range(len(text_features["word"])):  # text_features["word"] is the list of segmented words in current seq (query or title)
             # get node features
             word = text_features["word"][i].rstrip()
             if word == "":
@@ -817,7 +823,7 @@ def prepro(config):
 
     # get examples and counters
     if not config.processed_example_features:
-        examples = get_raw_examples(config, config.train_file, debug, debug_length)
+        examples = get_raw_examples(config.train_file, debug, debug_length)
         examples = get_featured_examples(config, examples)
         counters = get_counters(examples, config.emb_tags, config.emb_not_count_tags)
 

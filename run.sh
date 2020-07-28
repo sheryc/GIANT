@@ -11,3 +11,5 @@ python GIANT_main.py \
 --epochs 10 \
 --mode train \
 --debug
+
+# sync test 2
